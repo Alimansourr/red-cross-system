@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "117912574481",
+    "project_id": "red-cross-checklist",
+    "storage_bucket": "red-cross-checklist.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117912574481:android:8520390675277c82742fb0",
+        "android_client_info": {
+          "package_name": "com.example.fyp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjfE7XBO03S5z10P9pJP5zspEM0mVMfOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117912574481:android:f9cde4f36e808a84742fb0",
+        "android_client_info": {
+          "package_name": "com.example.patient_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjfE7XBO03S5z10P9pJP5zspEM0mVMfOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

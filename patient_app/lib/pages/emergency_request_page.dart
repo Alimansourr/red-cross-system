@@ -1,0 +1,280 @@
+import 'package:flutter/material.dart';
+import '../widgets/patient_app_bar.dart';
+import '../widgets/patient_input_decoration.dart';
+import '../widgets/patient_label.dart';
+import '../widgets/patient_section_card.dart';
+import '../services/emergency_request_service.dart';
+
+class EmergencyRequestPage extends StatefulWidget {
+  const EmergencyRequestPage({super.key});
+
+  @override
+  State<EmergencyRequestPage> createState() => _EmergencyRequestPageState();
+}
+
+class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
+  final EmergencyRequestService _service = EmergencyRequestService();
+
+  final TextEditingController _guestNameController = TextEditingController();
+  final TextEditingController _conditionController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+
+  String? _selectedEmergencyType;
+  bool _isLoading = false;
+  AssignedStation? _lastAssignedStation;
+
+  @override
+  void dispose() {
+    _guestNameController.dispose();
+    _conditionController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitEmergencyRequest() async {
+    final isGuest = _service.currentUser == null;
+    final guestName = _guestNameController.text.trim();
+    final emergencyType = _selectedEmergencyType;
+    final currentCondition = _conditionController.text.trim();
+    final phoneNumber = _phoneController.text.trim();
+
+    if (isGuest && guestName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your name.'),
+        ),
+      );
+      return;
+    }
+
+    if (emergencyType == null ||
+        currentCondition.isEmpty ||
+        phoneNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all emergency request fields.'),
+        ),
+      );
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final result = await _service.submitEmergencyRequest(
+        emergencyType: emergencyType,
+        currentCondition: currentCondition,
+        phoneNumber: phoneNumber,
+        guestName: guestName,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _lastAssignedStation = result.station;
+        _selectedEmergencyType = null;
+      });
+
+      _guestNameController.clear();
+      _conditionController.clear();
+      _phoneController.clear();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Emergency request sent to ${result.station.stationName}.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send emergency request: $e'),
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Widget _assignedStationCard() {
+    final station = _lastAssignedStation;
+    if (station == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xffeff6ff),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xffbfdbfe)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Nearest Assigned Station',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xff111827),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text('Name: ${station.stationName}'),
+            Text('Distance: ${station.distanceKm.toStringAsFixed(2)} km'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isGuest = _service.currentUser == null;
+
+    return Scaffold(
+      appBar: patientAppBar(context, 'Emergency Request'),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xffffeef1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xfffecdd3)),
+                  ),
+                  child: Text(
+                    isGuest
+                        ? 'You can send an emergency request without logging in. Your current location will be captured automatically and assigned to the nearest station.'
+                        : 'Your current location will be captured automatically and the request will be assigned to the nearest station.',
+                    style: const TextStyle(color: Color(0xff6b7280)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _assignedStationCard(),
+                PatientSectionCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isGuest) ...[
+                        const PatientLabel('Your Name'),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _guestNameController,
+                          enabled: !_isLoading,
+                          decoration: patientInputDecoration('Enter your name'),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      const PatientLabel('Emergency Type'),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _selectedEmergencyType,
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'medical',
+                            child: Text('Medical Emergency'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'injury',
+                            child: Text('Injury / Trauma'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'breathing',
+                            child: Text('Breathing Problem'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'other',
+                            child: Text('Other'),
+                          ),
+                        ],
+                        onChanged: _isLoading
+                            ? null
+                            : (value) {
+                          setState(() {
+                            _selectedEmergencyType = value;
+                          });
+                        },
+                        decoration:
+                        patientInputDecoration('Select emergency type'),
+                      ),
+                      const SizedBox(height: 16),
+                      const PatientLabel('Current Condition'),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _conditionController,
+                        maxLines: 4,
+                        enabled: !_isLoading,
+                        decoration: patientInputDecoration(
+                          'Describe the patient situation briefly',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const PatientLabel('Phone Number'),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _phoneController,
+                        enabled: !_isLoading,
+                        keyboardType: TextInputType.phone,
+                        decoration:
+                        patientInputDecoration('Enter contact number'),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed:
+                          _isLoading ? null : _submitEmergencyRequest,
+                          icon: _isLoading
+                              ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              color: Colors.white,
+                            ),
+                          )
+                              : const Icon(Icons.local_hospital_outlined),
+                          label: Text(
+                            _isLoading
+                                ? 'Sending...'
+                                : 'Send Emergency Request',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xffef3b4c),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
