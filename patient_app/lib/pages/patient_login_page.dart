@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../widgets/patient_input_decoration.dart';
 import '../widgets/patient_section_card.dart';
 import '../services/auth_service.dart';
+import '../services/emergency_request_service.dart';
 import 'patient_signup_page.dart';
 import 'patient_home_page.dart';
 import 'emergency_request_page.dart';
@@ -15,11 +18,13 @@ class PatientLoginPage extends StatefulWidget {
 
 class _PatientLoginPageState extends State<PatientLoginPage> {
   final AuthService _authService = AuthService();
+  final EmergencyRequestService _emergencyService = EmergencyRequestService();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isEmergencyLoading = false;
 
   @override
   void dispose() {
@@ -62,7 +67,6 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
       );
     } catch (e) {
       String errorMessage = 'Login failed. Please try again.';
-
       final errorText = e.toString();
 
       if (errorText.contains('user-not-found')) {
@@ -77,14 +81,54 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-        ),
+        SnackBar(content: Text(errorMessage)),
       );
     } finally {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _call140() async {
+    final uri = Uri(scheme: 'tel', path: '140');
+    final launched = await launchUrl(uri);
+    if (!launched) {
+      throw Exception('Could not call 140.');
+    }
+  }
+
+  Future<void> _handleQuickEmergency() async {
+    setState(() {
+      _isEmergencyLoading = true;
+    });
+
+    try {
+      final result = await _emergencyService.submitQuickEmergencyCall();
+      await _call140();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Calling 140 now. Your location was sent to ${result.station.stationName}.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Emergency action failed: $e'),
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isEmergencyLoading = false;
       });
     }
   }
@@ -198,6 +242,37 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  ElevatedButton.icon(
+                    onPressed:
+                    _isEmergencyLoading ? null : _handleQuickEmergency,
+                    icon: _isEmergencyLoading
+                        ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: Colors.white,
+                      ),
+                    )
+                        : const Icon(Icons.call),
+                    label: Text(
+                      _isEmergencyLoading
+                          ? 'Starting emergency...'
+                          : 'Emergency? Call 140 now',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xffef3b4c),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
                   OutlinedButton.icon(
                     onPressed: () {
                       Navigator.push(
@@ -208,7 +283,7 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
                       );
                     },
                     icon: const Icon(Icons.warning_amber_rounded),
-                    label: const Text('Emergency? Request ambulance now'),
+                    label: const Text('Open emergency request page'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xffef3b4c),
                       side: const BorderSide(color: Color(0xffef3b4c)),

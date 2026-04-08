@@ -22,6 +22,8 @@ class _PatientSignupPageState extends State<PatientSignupPage> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
+  final TextEditingController medicalHistoryController =
+  TextEditingController();
 
   String? selectedBloodType;
 
@@ -46,6 +48,7 @@ class _PatientSignupPageState extends State<PatientSignupPage> {
     passwordController.dispose();
     addressController.dispose();
     ageController.dispose();
+    medicalHistoryController.dispose();
     super.dispose();
   }
 
@@ -56,6 +59,7 @@ class _PatientSignupPageState extends State<PatientSignupPage> {
     final password = passwordController.text.trim();
     final address = addressController.text.trim();
     final ageText = ageController.text.trim();
+    final medicalHistory = medicalHistoryController.text.trim();
     final bloodType = selectedBloodType;
 
     if (fullName.isEmpty ||
@@ -67,7 +71,7 @@ class _PatientSignupPageState extends State<PatientSignupPage> {
         bloodType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill in all fields.'),
+          content: Text('Please fill in all required fields.'),
         ),
       );
       return;
@@ -106,6 +110,7 @@ class _PatientSignupPageState extends State<PatientSignupPage> {
         address: address,
         age: age,
         bloodType: bloodType,
+        medicalHistory: medicalHistory,
       );
 
       if (!mounted) return;
@@ -250,6 +255,17 @@ class _PatientSignupPageState extends State<PatientSignupPage> {
                       });
                     },
                     decoration: patientInputDecoration('Select blood type'),
+                  ),
+                  const SizedBox(height: 16),
+
+                  const PatientLabel('Medical History'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: medicalHistoryController,
+                    maxLines: 4,
+                    decoration: patientInputDecoration(
+                      'Enter allergies, chronic conditions, surgeries, medications...',
+                    ),
                   ),
                   const SizedBox(height: 24),
 

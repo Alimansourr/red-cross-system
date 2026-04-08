@@ -94,6 +94,8 @@ class PatientProfilePage extends StatelessWidget {
           final address = (data['address'] ?? 'Not provided').toString();
           final age = (data['age'] ?? 'Not provided').toString();
           final bloodType = (data['bloodType'] ?? 'Not provided').toString();
+          final medicalHistory =
+          (data['medicalHistory'] ?? 'Not provided').toString();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -149,6 +151,7 @@ class PatientProfilePage extends StatelessWidget {
                       _infoTile('Address', address),
                       _infoTile('Age', age),
                       _infoTile('Blood Type', bloodType),
+                      _infoTile('Medical History', medicalHistory),
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton(
@@ -187,6 +190,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
   late final TextEditingController phoneController;
   late final TextEditingController addressController;
   late final TextEditingController ageController;
+  late final TextEditingController medicalHistoryController;
 
   String? selectedBloodType;
   bool isSaving = false;
@@ -218,6 +222,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     ageController = TextEditingController(
       text: (widget.currentData['age'] ?? '').toString(),
     );
+    medicalHistoryController = TextEditingController(
+      text: (widget.currentData['medicalHistory'] ?? '').toString(),
+    );
 
     final blood = widget.currentData['bloodType']?.toString().trim();
     selectedBloodType = (blood != null && blood.isNotEmpty) ? blood : null;
@@ -229,6 +236,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     phoneController.dispose();
     addressController.dispose();
     ageController.dispose();
+    medicalHistoryController.dispose();
     super.dispose();
   }
 
@@ -237,6 +245,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     final phone = phoneController.text.trim();
     final address = addressController.text.trim();
     final ageText = ageController.text.trim();
+    final medicalHistory = medicalHistoryController.text.trim();
 
     if (fullName.isEmpty || phone.isEmpty || address.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -271,6 +280,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         address: address,
         age: age,
         bloodType: selectedBloodType,
+        medicalHistory: medicalHistory,
       );
 
       if (!mounted) return;
@@ -359,6 +369,16 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                   });
                 },
                 decoration: patientInputDecoration('Select blood type'),
+              ),
+              const SizedBox(height: 16),
+              const PatientLabel('Medical History'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: medicalHistoryController,
+                maxLines: 4,
+                decoration: patientInputDecoration(
+                  'Enter allergies, chronic conditions, surgeries, medications...',
+                ),
               ),
               const SizedBox(height: 10),
               const Text(

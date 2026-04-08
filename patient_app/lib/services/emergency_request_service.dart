@@ -74,9 +74,47 @@ class EmergencyRequestService {
       'latitude': position.latitude,
       'longitude': position.longitude,
       'location': GeoPoint(position.latitude, position.longitude),
+      'locationUrl':
+      'https://maps.google.com/?q=${position.latitude},${position.longitude}',
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
       'source': 'patient_app',
+    });
+
+    return EmergencyRequestResult(
+      requestId: requestRef.id,
+      station: station,
+    );
+  }
+
+  Future<EmergencyRequestResult> submitQuickEmergencyCall() async {
+    final position = await _determinePosition();
+
+    final station = await _findNearestStation(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+
+    final requestRef = await _firestore.collection('emergency_requests').add({
+      'patientId': null,
+      'isGuest': true,
+      'patientName': '',
+      'patientEmail': '',
+      'patientProfilePhone': '',
+      'contactPhone': '',
+      'emergencyType': 'quick_call',
+      'currentCondition': 'Quick emergency button pressed before login.',
+      'assignedStationId': station.id,
+      'assignedStationName': station.stationName,
+      'latitude': position.latitude,
+      'longitude': position.longitude,
+      'location': GeoPoint(position.latitude, position.longitude),
+      'locationUrl':
+      'https://maps.google.com/?q=${position.latitude},${position.longitude}',
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+      'source': 'quick_emergency_button',
+      'requiresDirectCall140': true,
     });
 
     return EmergencyRequestResult(
@@ -124,16 +162,12 @@ class EmergencyRequestService {
       final data = doc.data();
 
       final isActive = data['isActive'];
-      if (isActive != true) {
-        continue;
-      }
+      if (isActive != true) continue;
 
       final stationLatitude = _toDouble(data['latitude']);
       final stationLongitude = _toDouble(data['longitude']);
 
-      if (stationLatitude == null || stationLongitude == null) {
-        continue;
-      }
+      if (stationLatitude == null || stationLongitude == null) continue;
 
       final distanceKm = _calculateDistanceKm(
         latitude,

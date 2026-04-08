@@ -15,6 +15,7 @@ class AuthService {
     required String address,
     required int age,
     required String bloodType,
+    String? medicalHistory,
   }) async {
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email.trim(),
@@ -30,6 +31,7 @@ class AuthService {
       'address': address.trim(),
       'age': age,
       'bloodType': bloodType.trim(),
+      'medicalHistory': medicalHistory?.trim() ?? '',
       'createdAt': FieldValue.serverTimestamp(),
     });
   }

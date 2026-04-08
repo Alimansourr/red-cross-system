@@ -23,6 +23,7 @@ class PatientProfileService {
     required String address,
     int? age,
     String? bloodType,
+    String? medicalHistory,
   }) async {
     final user = _auth.currentUser;
 
@@ -43,6 +44,10 @@ class PatientProfileService {
 
     if (bloodType != null && bloodType.trim().isNotEmpty) {
       data['bloodType'] = bloodType.trim();
+    }
+
+    if (medicalHistory != null) {
+      data['medicalHistory'] = medicalHistory.trim();
     }
 
     await _firestore.collection('patients').doc(user.uid).set(
