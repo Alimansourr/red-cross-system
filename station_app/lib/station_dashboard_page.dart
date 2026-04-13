@@ -113,11 +113,9 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
   Color _dayBackgroundColor({
     required bool isToday,
     required bool isWeekend,
-    required bool hasOffDay,
     required bool hasEvent,
   }) {
     if (isToday) return const Color(0xffef3b4c);
-    if (hasOffDay) return const Color(0xfffee2e2);
     if (hasEvent) return const Color(0xffdbeafe);
     if (isWeekend) return const Color(0xfffffbeb);
     return Colors.transparent;
@@ -125,12 +123,10 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
 
   Color _dayTextColor({
     required bool isToday,
-    required bool hasOffDay,
     required bool hasEvent,
     required bool isWeekend,
   }) {
     if (isToday) return Colors.white;
-    if (hasOffDay) return const Color(0xffb91c1c);
     if (hasEvent) return const Color(0xff1d4ed8);
     if (isWeekend) return const Color(0xffa16207);
     return const Color(0xff111827);
@@ -141,7 +137,10 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
     required List<CalendarMarker> markers,
     required bool isWeekend,
   }) async {
-    final hasAnything = markers.isNotEmpty || isWeekend;
+    final eventMarkers =
+    markers.where((marker) => marker.type == 'event').toList();
+
+    final hasAnything = eventMarkers.isNotEmpty || isWeekend;
     if (!hasAnything) return;
 
     await showDialog(
@@ -158,16 +157,32 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                   padding: EdgeInsets.only(bottom: 8),
                   child: Text('• Weekend'),
                 ),
-              ...markers.map((marker) {
-                final label = marker.type == 'off_day' ? 'Off Day' : 'Event';
+              ...eventMarkers.map((marker) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('• $label: ${marker.title}'),
+                  child: Text('• Event: ${marker.title}'),
                 );
               }),
             ],
           ),
           actions: [
+            if (eventMarkers.isNotEmpty)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EventSignupsPage(fromLogin: false),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xffef3b4c),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Go to Events Page'),
+              ),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Close'),
@@ -221,7 +236,8 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const AmbulanceChecklistPage(fromLogin: false),
+                            builder: (_) =>
+                            const AmbulanceChecklistPage(fromLogin: false),
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -305,7 +321,9 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
             ),
             const Spacer(),
             Text(
-              _loggedInName.isEmpty ? 'Welcome to Station 104' : 'Welcome, $_loggedInName',
+              _loggedInName.isEmpty
+                  ? 'Welcome to Station 104'
+                  : 'Welcome, $_loggedInName',
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -376,10 +394,14 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: isBlue ? const Color(0xffdbeafe) : const Color(0xfffef3c7),
+                      color: isBlue
+                          ? const Color(0xffdbeafe)
+                          : const Color(0xfffef3c7),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isBlue ? const Color(0xff93c5fd) : const Color(0xfff5d76e),
+                        color: isBlue
+                            ? const Color(0xff93c5fd)
+                            : const Color(0xfff5d76e),
                       ),
                     ),
                     child: Row(
@@ -390,7 +412,9 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                           child: Icon(
                             Icons.circle,
                             size: 10,
-                            color: isBlue ? const Color(0xff3b82f6) : const Color(0xffeab308),
+                            color: isBlue
+                                ? const Color(0xff3b82f6)
+                                : const Color(0xffeab308),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -664,7 +688,8 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                       itemCount: filteredIds.length,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
@@ -806,8 +831,8 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                   final bool isWeekend = _isWeekend(current);
                   final String key = _dateKey(current);
                   final List<CalendarMarker> markers = markersByDate[key] ?? [];
-                  final bool hasEvent = markers.any((marker) => marker.type == 'event');
-                  final bool hasOffDay = markers.any((marker) => marker.type == 'off_day');
+                  final bool hasEvent =
+                  markers.any((marker) => marker.type == 'event');
 
                   return InkWell(
                     borderRadius: BorderRadius.circular(999),
@@ -821,15 +846,12 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                         color: _dayBackgroundColor(
                           isToday: isToday,
                           isWeekend: isWeekend,
-                          hasOffDay: hasOffDay,
                           hasEvent: hasEvent,
                         ),
                         shape: BoxShape.circle,
-                        border: !isToday && (hasEvent || hasOffDay || isWeekend)
+                        border: !isToday && (hasEvent || isWeekend)
                             ? Border.all(
-                          color: hasOffDay
-                              ? const Color(0xfffecaca)
-                              : hasEvent
+                          color: hasEvent
                               ? const Color(0xff93c5fd)
                               : const Color(0xfffde68a),
                         )
@@ -843,14 +865,13 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                             style: TextStyle(
                               color: _dayTextColor(
                                 isToday: isToday,
-                                hasOffDay: hasOffDay,
                                 hasEvent: hasEvent,
                                 isWeekend: isWeekend,
                               ),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          if (!isToday && (hasEvent || hasOffDay || isWeekend)) ...[
+                          if (!isToday && (hasEvent || isWeekend)) ...[
                             const SizedBox(height: 4),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -865,18 +886,7 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                                       shape: BoxShape.circle,
                                     ),
                                   ),
-                                if (hasEvent && (hasOffDay || isWeekend))
-                                  const SizedBox(width: 3),
-                                if (hasOffDay)
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xffef4444),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                if (hasOffDay && isWeekend)
+                                if (hasEvent && isWeekend)
                                   const SizedBox(width: 3),
                                 if (isWeekend)
                                   Container(
@@ -902,7 +912,6 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
                 runSpacing: 10,
                 children: [
                   _legendItem(color: const Color(0xff3b82f6), label: 'Event'),
-                  _legendItem(color: const Color(0xffef4444), label: 'Off Day'),
                   _legendItem(color: const Color(0xfff59e0b), label: 'Weekend'),
                 ],
               ),

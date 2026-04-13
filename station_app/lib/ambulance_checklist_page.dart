@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
 import 'station_dashboard_page.dart';
-import 'services/checklist_service.dart';
-import 'helpers/auth_helper.dart';
+import './services/checklist_service.dart';
+import './helpers/auth_helper.dart';
+import 'replenishment_page.dart';
 
 class AmbulanceChecklistPage extends StatefulWidget {
   final bool fromLogin;
@@ -19,20 +20,17 @@ class AmbulanceChecklistPage extends StatefulWidget {
 }
 
 class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
-  // ── Profile ──
   String _emtName = '';
-  String _team    = '';
+  String _team = '';
   String _subcode = '';
   bool _loadingProfile = true;
 
-  // ── Car numbers ──
-  List<String> _carNumbers      = [];
-  String?      selectedCarNumber;
+  List<String> _carNumbers = [];
+  String? selectedCarNumber;
 
-  // ── Checklist ──
   String? selectedChecklistType;
-  bool    checklistStarted = false;
-  bool    _isSubmitting    = false;
+  bool checklistStarted = false;
+  bool _isSubmitting = false;
 
   final ChecklistService _checklistService = ChecklistService();
 
@@ -48,7 +46,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     _loadCarNumbers();
   }
 
-  // ── Load logged-in user's profile ──
   Future<void> _loadUserProfile() async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -63,9 +60,9 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
 
       if (mounted) {
         setState(() {
-          _emtName        = data['fullName']?.toString() ?? '';
-          _team           = data['team']?.toString() ?? '';
-          _subcode        = data['subcode']?.toString() ?? '';
+          _emtName = data['fullName']?.toString() ?? '';
+          _team = data['team']?.toString() ?? '';
+          _subcode = data['subcode']?.toString() ?? '';
           _loadingProfile = false;
         });
       }
@@ -79,7 +76,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     }
   }
 
-  // ── Load car numbers from checklist_status ──
   Future<void> _loadCarNumbers() async {
     try {
       final cars = await _checklistService.fetchCarNumbersFromChecklistStatus();
@@ -139,44 +135,57 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
           ChecklistSubSection(
             title: 'Back Compartment',
             items: [
-              ChecklistItem.quantity(name: 'Scoop belts',  requirement: '>= 2', maxValue: 2),
+              ChecklistItem.quantity(
+                  name: 'Scoop belts', requirement: '>= 2', maxValue: 2),
               ChecklistItem.dropdown(
                 name: 'AED',
                 requirement: '>= 75',
                 dropdownOptions: ['Select...', 'Below 75', '75+', '100'],
               ),
-              ChecklistItem.quantity(name: 'AED patches',  requirement: '>= 2', maxValue: 2),
-              ChecklistItem.toggle(name: 'Gloves S',   warningOnly: true),
-              ChecklistItem.toggle(name: 'Gloves M',   warningOnly: true),
-              ChecklistItem.toggle(name: 'Gloves L',   warningOnly: true),
-              ChecklistItem.toggle(name: 'Gloves XL',  warningOnly: true),
+              ChecklistItem.quantity(
+                  name: 'AED patches', requirement: '>= 2', maxValue: 2),
+              ChecklistItem.toggle(name: 'Gloves S', warningOnly: true),
+              ChecklistItem.toggle(name: 'Gloves M', warningOnly: true),
+              ChecklistItem.toggle(name: 'Gloves L', warningOnly: true),
+              ChecklistItem.toggle(name: 'Gloves XL', warningOnly: true),
               ChecklistItem.toggle(name: 'Kidney basin', warningOnly: true),
             ],
           ),
           ChecklistSubSection(
             title: 'Medical Bag',
             items: [
-              ChecklistItem.textQty(name: 'glucometer needles', requirement: 'Exp: 10'),
-              ChecklistItem.textQty(name: 'glucometer strips',  requirement: 'Exp: 15'),
-              ChecklistItem.textQty(name: 'Gauze',              requirement: 'Exp: 10'),
-              ChecklistItem.quantity(name: 'Thermal blankets',  requirement: '>= 2', maxValue: 2),
-              ChecklistItem.toggle(name: 'Scissor',             warningOnly: true),
-              ChecklistItem.quantity(name: 'Plaster',           requirement: '>= 2', maxValue: 2),
-              ChecklistItem.quantity(name: 'Elastic Bandage',   requirement: '>= 4', maxValue: 4),
+              ChecklistItem.textQty(
+                  name: 'glucometer needles', requirement: 'Exp: 10'),
+              ChecklistItem.textQty(
+                  name: 'glucometer strips', requirement: 'Exp: 15'),
+              ChecklistItem.textQty(name: 'Gauze', requirement: 'Exp: 10'),
+              ChecklistItem.quantity(
+                  name: 'Thermal blankets', requirement: '>= 2', maxValue: 2),
+              ChecklistItem.toggle(name: 'Scissor', warningOnly: true),
+              ChecklistItem.quantity(
+                  name: 'Plaster', requirement: '>= 2', maxValue: 2),
+              ChecklistItem.quantity(
+                  name: 'Elastic Bandage', requirement: '>= 4', maxValue: 4),
             ],
           ),
           ChecklistSubSection(
             title: 'Trauma Bag',
             items: [
-              ChecklistItem.quantity(name: 'Towels',             requirement: '>= 2', maxValue: 2),
-              ChecklistItem.quantity(name: 'Ice Packs',          requirement: '>= 2', maxValue: 2),
-              ChecklistItem.quantity(name: 'SAM Splints',        requirement: '>= 3', maxValue: 3),
-              ChecklistItem.toggle(name: 'Spider Belt',          warningOnly: true),
-              ChecklistItem.quantity(name: 'Hooks',              requirement: '>= 5', maxValue: 5),
-              ChecklistItem.toggle(name: 'Duct tape',            warningOnly: true),
-              ChecklistItem.quantity(name: 'Triangular bandage', requirement: '>= 5', maxValue: 5),
-              ChecklistItem.quantity(name: 'Thermal blanket',    requirement: '>= 2', maxValue: 2),
-              ChecklistItem.toggle(name: 'Pelvic belt',          warningOnly: true),
+              ChecklistItem.quantity(
+                  name: 'Towels', requirement: '>= 2', maxValue: 2),
+              ChecklistItem.quantity(
+                  name: 'Ice Packs', requirement: '>= 2', maxValue: 2),
+              ChecklistItem.quantity(
+                  name: 'SAM Splints', requirement: '>= 3', maxValue: 3),
+              ChecklistItem.toggle(name: 'Spider Belt', warningOnly: true),
+              ChecklistItem.quantity(
+                  name: 'Hooks', requirement: '>= 5', maxValue: 5),
+              ChecklistItem.toggle(name: 'Duct tape', warningOnly: true),
+              ChecklistItem.quantity(
+                  name: 'Triangular bandage', requirement: '>= 5', maxValue: 5),
+              ChecklistItem.quantity(
+                  name: 'Thermal blanket', requirement: '>= 2', maxValue: 2),
+              ChecklistItem.toggle(name: 'Pelvic belt', warningOnly: true),
             ],
           ),
         ],
@@ -202,7 +211,8 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     if (_emtName.isEmpty || _team.isEmpty || _subcode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Your profile is incomplete. Contact admin.')),
+          content: Text('Your profile is incomplete. Contact admin.'),
+        ),
       );
       return;
     }
@@ -255,10 +265,73 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     setState(() => checklistStarted = true);
   }
 
-  Future<void> _submitChecklist() async {
+  bool _isItemCompleted(ChecklistItem item) {
+    switch (item.type) {
+      case ChecklistItemType.quantity:
+      case ChecklistItemType.quantityWithZero:
+        return item.selectedRadioValue != null;
+
+      case ChecklistItemType.dropdown:
+        return item.selectedDropdownValue != null &&
+            item.selectedDropdownValue != 'Select...' &&
+            item.selectedDropdownValue != 'Select.';
+
+      case ChecklistItemType.toggle:
+        return true;
+
+      case ChecklistItemType.textQty:
+        return (item.textController?.text.trim().isNotEmpty ?? false);
+    }
+  }
+
+  List<String> _validateChecklistBeforeSubmit() {
+    final errors = <String>[];
+
+    if (selectedChecklistType == null || selectedChecklistType!.isEmpty) {
+      errors.add('Checklist type is required.');
+    }
+
     if (selectedCarNumber == null || selectedCarNumber!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a car number.')),
+      errors.add('Car number is required.');
+    }
+
+    for (final section in sections) {
+      for (final subSection in section.subSections) {
+        for (final item in subSection.items) {
+          if (!_isItemCompleted(item)) {
+            errors.add('${section.title} > ${subSection.title} > ${item.name}');
+          }
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  Future<void> _submitChecklist() async {
+    final errors = _validateChecklistBeforeSubmit();
+
+    if (errors.isNotEmpty) {
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Checklist Incomplete'),
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: errors.map((e) => Text('• $e')).toList(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
       );
       return;
     }
@@ -278,14 +351,33 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      await _checklistService.submitChecklist(
-        emtName:       _emtName,
-        team:          _team,
-        carNumber:     selectedCarNumber!,
+      final result = await _checklistService.submitChecklist(
+        emtName: _emtName,
+        team: _team,
+        carNumber: selectedCarNumber!,
         checklistType: selectedChecklistType!,
-        subcode:       _subcode,
-        sections:      sectionsData,
+        subcode: _subcode,
+        sections: sectionsData,
       );
+
+      if (!mounted) return;
+
+      if (result.replenishmentItems.isNotEmpty) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ReplenishmentPage(
+              items: result.replenishmentItems,
+              checklistId: result.checklistId,
+              carNumber: selectedCarNumber!,
+              emtName: _emtName,
+              team: _team,
+              checklistType: selectedChecklistType!,
+              checklistService: _checklistService,
+            ),
+          ),
+        );
+      }
 
       if (!mounted) return;
 
@@ -297,10 +389,10 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
       );
 
       setState(() {
-        checklistStarted      = false;
+        checklistStarted = false;
         selectedChecklistType = null;
-        selectedCarNumber     = null;
-        sections              = _buildChecklistSections();
+        selectedCarNumber = null;
+        sections = _buildChecklistSections();
       });
     } catch (e) {
       if (!mounted) return;
@@ -317,9 +409,11 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
 
   bool _showWarning(ChecklistItem item) {
     if (item.name == 'AED') return item.selectedDropdownValue == 'Below 75';
+
     if (item.warningOnly && item.type == ChecklistItemType.toggle) {
       return item.toggleValue == false;
     }
+
     if (item.type == ChecklistItemType.textQty) {
       final entered = int.tryParse(item.textController?.text.trim() ?? '') ?? 0;
       if (item.requirement != null) {
@@ -329,26 +423,29 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
         }
       }
     }
+
     if ((item.type == ChecklistItemType.quantity ||
         item.type == ChecklistItemType.quantityWithZero) &&
         item.requirement != null) {
       final selected = item.selectedRadioValue ?? 0;
-      final match    = RegExp(r'(\d+)').firstMatch(item.requirement!);
+      final match = RegExp(r'(\d+)').firstMatch(item.requirement!);
       if (match != null) {
         return selected < (int.tryParse(match.group(1) ?? '') ?? 0);
       }
     }
+
     if (item.type == ChecklistItemType.dropdown && item.requirement != null) {
       final value = item.selectedDropdownValue ?? '';
       final match = RegExp(r'(\d+)').firstMatch(item.requirement!);
       if (match != null) {
         final req = int.tryParse(match.group(1) ?? '') ?? 0;
-        if (value == 'Select...') return true;
+        if (value == 'Select...' || value == 'Select.') return true;
         if (value == '0-4') return 4 < req;
         if (value == '5-9') return 9 < req;
         if (value == '10+') return 10 < req;
       }
     }
+
     return false;
   }
 
@@ -415,8 +512,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
               style: TextStyle(fontSize: 14, color: Color(0xff6b7280)),
             ),
             const SizedBox(height: 24),
-
-            // ── Read-only profile info ──
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -433,10 +528,7 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // ── Checklist type ──
             _buildLabeledDropdown(
               'Checklist Type',
               selectedChecklistType,
@@ -444,10 +536,7 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                   (value) => setState(() => selectedChecklistType = value),
               hint: 'Select Pre or Post checklist',
             ),
-
             const SizedBox(height: 16),
-
-            // ── Car number from checklist_status ──
             _buildLabeledDropdown(
               'Car Number',
               selectedCarNumber,
@@ -455,7 +544,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                   (value) => setState(() => selectedCarNumber = value),
               hint: 'Select ambulance car number',
             ),
-
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -486,8 +574,10 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
       children: [
         Icon(icon, size: 18, color: const Color(0xff6b7280)),
         const SizedBox(width: 10),
-        Text('$label: ',
-            style: const TextStyle(fontSize: 14, color: Color(0xff6b7280))),
+        Text(
+          '$label: ',
+          style: const TextStyle(fontSize: 14, color: Color(0xff6b7280)),
+        ),
         Expanded(
           child: Text(
             value.isEmpty ? 'Not set' : value,
@@ -523,19 +613,24 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: _isSubmitting
                 ? const SizedBox(
               width: 22,
               height: 22,
               child: CircularProgressIndicator(
-                  color: Colors.white, strokeWidth: 2),
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
             )
                 : const Text(
               'Submit Checklist',
               style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w600),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -558,14 +653,14 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
           const Text(
             'Ambulance',
             style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xff111827)),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xff111827),
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Checking for: $_emtName on Car: ${selectedCarNumber ?? '-'}'
-                ' for Team: $_team at Station: 104',
+            'Checking for: $_emtName on Car: ${selectedCarNumber ?? '-'} for Team: $_team at Station: 104',
             style: const TextStyle(fontSize: 14, color: Color(0xff6b7280)),
           ),
         ],
@@ -577,8 +672,7 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        tilePadding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -595,9 +689,10 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
         title: Text(
           section.title,
           style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Color(0xff111827)),
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color: Color(0xff111827),
+          ),
         ),
         initiallyExpanded: true,
         children: section.subSections
@@ -614,8 +709,7 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        tilePadding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -634,9 +728,8 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
           style: const TextStyle(fontSize: 16, color: Color(0xff111827)),
         ),
         initiallyExpanded: true,
-        children: subSection.items
-            .map((item) => _buildChecklistItemRow(item))
-            .toList(),
+        children:
+        subSection.items.map((item) => _buildChecklistItemRow(item)).toList(),
       ),
     );
   }
@@ -646,7 +739,8 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0xfff1f5f9)))),
+        border: Border(top: BorderSide(color: Color(0xfff1f5f9))),
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final bool small = constraints.maxWidth < 850;
@@ -675,8 +769,9 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
               Expanded(
                 flex: 2,
                 child: Align(
-                    alignment: Alignment.centerRight,
-                    child: _buildItemControl(item)),
+                  alignment: Alignment.centerRight,
+                  child: _buildItemControl(item),
+                ),
               ),
             ],
           );
@@ -692,9 +787,10 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
             size: 18, color: Color(0xff64748b)),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(item.name,
-              style: const TextStyle(
-                  fontSize: 15, color: Color(0xff111827))),
+          child: Text(
+            item.name,
+            style: const TextStyle(fontSize: 15, color: Color(0xff111827)),
+          ),
         ),
         if (showWarning)
           const Icon(Icons.warning_amber_rounded,
@@ -714,11 +810,14 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
         ),
         if (showWarning) ...[
           const SizedBox(width: 6),
-          const Text('!',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xfff4b400))),
+          const Text(
+            '!',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xfff4b400),
+            ),
+          ),
         ],
       ],
     );
@@ -740,12 +839,12 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                   groupValue: item.selectedRadioValue,
                   activeColor: const Color(0xffef3b4c),
                   visualDensity: VisualDensity.compact,
-                  onChanged: (v) =>
-                      setState(() => item.selectedRadioValue = v),
+                  onChanged: (v) => setState(() => item.selectedRadioValue = v),
                 ),
-                Text('$value',
-                    style: const TextStyle(
-                        fontSize: 14, color: Color(0xff111827))),
+                Text(
+                  '$value',
+                  style: const TextStyle(fontSize: 14, color: Color(0xff111827)),
+                ),
               ],
             );
           }),
@@ -765,12 +864,12 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                   groupValue: item.selectedRadioValue,
                   activeColor: const Color(0xffef3b4c),
                   visualDensity: VisualDensity.compact,
-                  onChanged: (v) =>
-                      setState(() => item.selectedRadioValue = v),
+                  onChanged: (v) => setState(() => item.selectedRadioValue = v),
                 ),
-                Text('$value',
-                    style: const TextStyle(
-                        fontSize: 14, color: Color(0xff111827))),
+                Text(
+                  '$value',
+                  style: const TextStyle(fontSize: 14, color: Color(0xff111827)),
+                ),
               ],
             );
           }),
@@ -784,25 +883,24 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
             isExpanded: true,
             decoration: InputDecoration(
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 12),
+              contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                const BorderSide(color: Color(0xffe5e7eb)),
+                borderSide: const BorderSide(color: Color(0xffe5e7eb)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                const BorderSide(color: Color(0xffe5e7eb)),
+                borderSide: const BorderSide(color: Color(0xffe5e7eb)),
               ),
             ),
             items: item.dropdownOptions!
-                .map((option) => DropdownMenuItem<String>(
-              value: option,
-              child: Text(option,
-                  overflow: TextOverflow.ellipsis),
-            ))
+                .map(
+                  (option) => DropdownMenuItem<String>(
+                value: option,
+                child: Text(option, overflow: TextOverflow.ellipsis),
+              ),
+            )
                 .toList(),
             onChanged: (value) =>
                 setState(() => item.selectedDropdownValue = value),
@@ -814,20 +912,17 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('No',
-                style:
-                TextStyle(fontSize: 14, color: Color(0xff111827))),
+                style: TextStyle(fontSize: 14, color: Color(0xff111827))),
             Switch(
               value: item.toggleValue,
               activeColor: Colors.white,
               activeTrackColor: const Color(0xffef3b4c),
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: const Color(0xffe2e8f0),
-              onChanged: (value) =>
-                  setState(() => item.toggleValue = value),
+              onChanged: (value) => setState(() => item.toggleValue = value),
             ),
             const Text('Yes',
-                style:
-                TextStyle(fontSize: 14, color: Color(0xff111827))),
+                style: TextStyle(fontSize: 14, color: Color(0xff111827))),
           ],
         );
 
@@ -842,17 +937,15 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
             decoration: InputDecoration(
               hintText: 'Qty',
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 12),
+              contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                const BorderSide(color: Color(0xffe5e7eb)),
+                borderSide: const BorderSide(color: Color(0xffe5e7eb)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                const BorderSide(color: Color(0xffe5e7eb)),
+                borderSide: const BorderSide(color: Color(0xffe5e7eb)),
               ),
             ),
           ),
@@ -871,8 +964,8 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
-                fontSize: 14, color: Color(0xff111827))),
+            style:
+            const TextStyle(fontSize: 14, color: Color(0xff111827))),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
@@ -881,30 +974,28 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
             hintText: hint,
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 16),
+            contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide:
-              const BorderSide(color: Color(0xffd1d5db)),
+              borderSide: const BorderSide(color: Color(0xffd1d5db)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide:
-              const BorderSide(color: Color(0xffd1d5db)),
+              borderSide: const BorderSide(color: Color(0xffd1d5db)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide:
-              const BorderSide(color: Color(0xffef3b4c)),
+              borderSide: const BorderSide(color: Color(0xffef3b4c)),
             ),
           ),
           items: items
-              .map((item) => DropdownMenuItem<String>(
-            value: item,
-            child: Text(item,
-                overflow: TextOverflow.ellipsis),
-          ))
+              .map(
+                (item) => DropdownMenuItem<String>(
+              value: item,
+              child: Text(item, overflow: TextOverflow.ellipsis),
+            ),
+          )
               .toList(),
           onChanged: onChanged,
         ),
@@ -914,12 +1005,10 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
 
   Widget _buildTopBar(BuildContext context) {
     return Container(
-      padding:
-      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: const BoxDecoration(
         color: Color(0xfff3f4f6),
-        border:
-        Border(bottom: BorderSide(color: Color(0xffe5e7eb))),
+        border: Border(bottom: BorderSide(color: Color(0xffe5e7eb))),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -942,20 +1031,24 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Ambulance Checklist',
-                              style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xff111827))),
+                          Text(
+                            'Ambulance Checklist',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xff111827),
+                            ),
+                          ),
                           SizedBox(height: 2),
                           Text(
-                              'Inspect ambulance equipment and readiness',
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xff6b7280))),
+                            'Inspect ambulance equipment and readiness',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xff6b7280),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -968,8 +1061,7 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                     child: OutlinedButton.icon(
                       onPressed: () => Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(
-                            builder: (_) => const LoginPage()),
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
                             (route) => false,
                       ),
                       icon: const Icon(Icons.home_outlined),
@@ -977,13 +1069,11 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xff111827),
                         backgroundColor: Colors.white,
-                        side: const BorderSide(
-                            color: Color(0xffd1d5db)),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 14),
+                        side: const BorderSide(color: Color(0xffd1d5db)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   )
@@ -992,27 +1082,23 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () =>
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                    const StationDashboardPage()),
-                                    (route) => false,
-                              ),
+                          onPressed: () => Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const StationDashboardPage(),
+                            ),
+                                (route) => false,
+                          ),
                           icon: const Icon(Icons.home_outlined),
                           label: const Text('Home'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor:
-                            const Color(0xff111827),
+                            foregroundColor: const Color(0xff111827),
                             backgroundColor: Colors.white,
-                            side: const BorderSide(
-                                color: Color(0xffd1d5db)),
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 14),
+                            side: const BorderSide(color: Color(0xffd1d5db)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius:
-                                BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                       ),
@@ -1021,15 +1107,13 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                         child: ElevatedButton(
                           onPressed: () => logoutUser(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                            const Color(0xffef3b4c),
+                            backgroundColor: const Color(0xffef3b4c),
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius:
-                                BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                           child: const Text('Logout'),
                         ),
@@ -1044,8 +1128,7 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
             children: [
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back,
-                    color: Color(0xff111827)),
+                icon: const Icon(Icons.arrow_back, color: Color(0xff111827)),
               ),
               const SizedBox(width: 4),
               const Icon(Icons.checklist_rtl,
@@ -1055,17 +1138,20 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Ambulance Checklist',
-                        style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xff111827))),
+                    Text(
+                      'Ambulance Checklist',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff111827),
+                      ),
+                    ),
                     SizedBox(height: 2),
                     Text(
-                        'Inspect ambulance equipment and readiness',
-                        style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xff6b7280))),
+                      'Inspect ambulance equipment and readiness',
+                      style:
+                      TextStyle(fontSize: 16, color: Color(0xff6b7280)),
+                    ),
                   ],
                 ),
               ),
@@ -1084,12 +1170,12 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xff111827),
                   backgroundColor: Colors.white,
-                  side: const BorderSide(
-                      color: Color(0xffd1d5db)),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                  side: const BorderSide(color: Color(0xffd1d5db)),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
               if (!widget.fromLogin) ...[
@@ -1103,7 +1189,8 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 18, vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   child: const Text('Logout'),
                 ),
@@ -1164,10 +1251,11 @@ class ChecklistItem {
     required int maxValue,
   }) =>
       ChecklistItem._(
-          name: name,
-          type: ChecklistItemType.quantityWithZero,
-          requirement: requirement,
-          maxValue: maxValue);
+        name: name,
+        type: ChecklistItemType.quantityWithZero,
+        requirement: requirement,
+        maxValue: maxValue,
+      );
 
   factory ChecklistItem.dropdown({
     required String name,
@@ -1175,54 +1263,63 @@ class ChecklistItem {
     required List<String> dropdownOptions,
   }) =>
       ChecklistItem._(
-          name: name,
-          type: ChecklistItemType.dropdown,
-          requirement: requirement,
-          dropdownOptions: dropdownOptions,
-          selectedDropdownValue: dropdownOptions.first);
+        name: name,
+        type: ChecklistItemType.dropdown,
+        requirement: requirement,
+        dropdownOptions: dropdownOptions,
+        selectedDropdownValue: dropdownOptions.first,
+      );
 
   factory ChecklistItem.toggle({
     required String name,
     bool warningOnly = false,
   }) =>
       ChecklistItem._(
-          name: name,
-          type: ChecklistItemType.toggle,
-          warningOnly: warningOnly);
+        name: name,
+        type: ChecklistItemType.toggle,
+        warningOnly: warningOnly,
+      );
 
   factory ChecklistItem.textQty({
     required String name,
     required String requirement,
   }) =>
       ChecklistItem._(
-          name: name,
-          type: ChecklistItemType.textQty,
-          requirement: requirement,
-          textController: TextEditingController());
+        name: name,
+        type: ChecklistItemType.textQty,
+        requirement: requirement,
+        textController: TextEditingController(),
+      );
 
   ChecklistItemData toData() {
     dynamic value;
     String typeStr;
+
     switch (type) {
       case ChecklistItemType.quantity:
       case ChecklistItemType.quantityWithZero:
-        value   = selectedRadioValue ?? 0;
+        value = selectedRadioValue ?? 0;
         typeStr = 'quantity';
         break;
       case ChecklistItemType.dropdown:
-        value   = selectedDropdownValue ?? '';
+        value = selectedDropdownValue ?? '';
         typeStr = 'dropdown';
         break;
       case ChecklistItemType.toggle:
-        value   = toggleValue;
+        value = toggleValue;
         typeStr = 'toggle';
         break;
       case ChecklistItemType.textQty:
-        value   = textController?.text.trim() ?? '';
+        value = textController?.text.trim() ?? '';
         typeStr = 'textQty';
         break;
     }
+
     return ChecklistItemData(
-        name: name, type: typeStr, value: value, requirement: requirement);
+      name: name,
+      type: typeStr,
+      value: value,
+      requirement: requirement,
+    );
   }
 }
