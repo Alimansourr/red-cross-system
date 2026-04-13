@@ -16,8 +16,8 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
   final EmergencyRequestService _service = EmergencyRequestService();
 
   final TextEditingController _guestNameController = TextEditingController();
+  final TextEditingController _guestPhoneController = TextEditingController();
   final TextEditingController _conditionController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
 
   String? _selectedEmergencyType;
   bool _isLoading = false;
@@ -26,17 +26,17 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
   @override
   void dispose() {
     _guestNameController.dispose();
+    _guestPhoneController.dispose();
     _conditionController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
   Future<void> _submitEmergencyRequest() async {
     final isGuest = _service.currentUser == null;
     final guestName = _guestNameController.text.trim();
+    final guestPhone = _guestPhoneController.text.trim();
     final emergencyType = _selectedEmergencyType;
     final currentCondition = _conditionController.text.trim();
-    final phoneNumber = _phoneController.text.trim();
 
     if (isGuest && guestName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -47,12 +47,19 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
       return;
     }
 
-    if (emergencyType == null ||
-        currentCondition.isEmpty ||
-        phoneNumber.isEmpty) {
+    if (isGuest && guestPhone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill in all emergency request fields.'),
+          content: Text('Please enter your phone number.'),
+        ),
+      );
+      return;
+    }
+
+    if (emergencyType == null || currentCondition.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all required emergency fields.'),
         ),
       );
       return;
@@ -68,8 +75,8 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
       final result = await _service.submitEmergencyRequest(
         emergencyType: emergencyType,
         currentCondition: currentCondition,
-        phoneNumber: phoneNumber,
         guestName: guestName,
+        guestPhone: guestPhone,
       );
 
       if (!mounted) return;
@@ -80,8 +87,8 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
       });
 
       _guestNameController.clear();
+      _guestPhoneController.clear();
       _conditionController.clear();
-      _phoneController.clear();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -166,7 +173,7 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
                   child: Text(
                     isGuest
                         ? 'You can send an emergency request without logging in. Your current location will be captured automatically and assigned to the nearest station.'
-                        : 'Your current location will be captured automatically and the request will be assigned to the nearest station.',
+                        : 'Your current location will be captured automatically and your profile information will be sent with the request to the nearest station.',
                     style: const TextStyle(color: Color(0xff6b7280)),
                   ),
                 ),
@@ -183,6 +190,17 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
                           controller: _guestNameController,
                           enabled: !_isLoading,
                           decoration: patientInputDecoration('Enter your name'),
+                        ),
+                        const SizedBox(height: 16),
+
+                        const PatientLabel('Phone Number'),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _guestPhoneController,
+                          enabled: !_isLoading,
+                          keyboardType: TextInputType.phone,
+                          decoration:
+                          patientInputDecoration('Enter contact number'),
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -228,16 +246,6 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
                         decoration: patientInputDecoration(
                           'Describe the patient situation briefly',
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      const PatientLabel('Phone Number'),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _phoneController,
-                        enabled: !_isLoading,
-                        keyboardType: TextInputType.phone,
-                        decoration:
-                        patientInputDecoration('Enter contact number'),
                       ),
                       const SizedBox(height: 24),
                       SizedBox(

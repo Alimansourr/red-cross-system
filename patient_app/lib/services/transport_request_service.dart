@@ -62,6 +62,11 @@ class TransportRequestService {
       'patientName': (patientData['fullName'] ?? '').toString(),
       'patientEmail': (patientData['email'] ?? user.email ?? '').toString(),
       'patientProfilePhone': (patientData['phone'] ?? '').toString(),
+      'patientAddress': (patientData['address'] ?? '').toString(),
+      'patientAge': patientData['age'],
+      'patientBloodType': (patientData['bloodType'] ?? '').toString(),
+      'patientMedicalHistory':
+      (patientData['medicalHistory'] ?? '').toString(),
       'transportType': transportType.trim(),
       'pickupLocation': pickupLocation.trim(),
       'destination': destination.trim(),

@@ -35,8 +35,8 @@ class EmergencyRequestService {
   Future<EmergencyRequestResult> submitEmergencyRequest({
     required String emergencyType,
     required String currentCondition,
-    required String phoneNumber,
     String guestName = '',
+    String guestPhone = '',
   }) async {
     final user = _auth.currentUser;
     Map<String, dynamic> patientData = {};
@@ -57,16 +57,33 @@ class EmergencyRequestService {
     final requestRef = await _firestore.collection('emergency_requests').add({
       'patientId': user?.uid,
       'isGuest': user == null,
+
       'patientName': user != null
           ? (patientData['fullName'] ?? '').toString()
           : guestName.trim(),
+
       'patientEmail': user != null
           ? (patientData['email'] ?? user.email ?? '').toString()
           : '',
+
       'patientProfilePhone': user != null
           ? (patientData['phone'] ?? '').toString()
+          : guestPhone.trim(),
+
+      'patientAddress': user != null
+          ? (patientData['address'] ?? '').toString()
           : '',
-      'contactPhone': phoneNumber.trim(),
+
+      'patientAge': user != null ? patientData['age'] : null,
+
+      'patientBloodType': user != null
+          ? (patientData['bloodType'] ?? '').toString()
+          : '',
+
+      'patientMedicalHistory': user != null
+          ? (patientData['medicalHistory'] ?? '').toString()
+          : '',
+
       'emergencyType': emergencyType.trim(),
       'currentCondition': currentCondition.trim(),
       'assignedStationId': station.id,
@@ -95,13 +112,9 @@ class EmergencyRequestService {
       longitude: position.longitude,
     );
 
-    final requestRef = await _firestore.collection('emergency_requests').add({
-      'patientId': null,
+    final requestRef =
+    await _firestore.collection('quick_emergency_requests').add({
       'isGuest': true,
-      'patientName': '',
-      'patientEmail': '',
-      'patientProfilePhone': '',
-      'contactPhone': '',
       'emergencyType': 'quick_call',
       'currentCondition': 'Quick emergency button pressed before login.',
       'assignedStationId': station.id,

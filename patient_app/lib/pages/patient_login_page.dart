@@ -7,7 +7,6 @@ import '../services/auth_service.dart';
 import '../services/emergency_request_service.dart';
 import 'patient_signup_page.dart';
 import 'patient_home_page.dart';
-import 'emergency_request_page.dart';
 
 class PatientLoginPage extends StatefulWidget {
   const PatientLoginPage({super.key});
@@ -242,7 +241,6 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
                   ElevatedButton.icon(
                     onPressed:
                     _isEmergencyLoading ? null : _handleQuickEmergency,
@@ -264,29 +262,6 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xffef3b4c),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const EmergencyRequestPage(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.warning_amber_rounded),
-                    label: const Text('Open emergency request page'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xffef3b4c),
-                      side: const BorderSide(color: Color(0xffef3b4c)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

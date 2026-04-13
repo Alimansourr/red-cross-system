@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../widgets/patient_app_bar.dart';
 import '../widgets/patient_input_decoration.dart';
 import '../widgets/patient_label.dart';
 import '../widgets/patient_section_card.dart';
 import '../services/transport_request_service.dart';
+
 
 class TransportRequestPage extends StatefulWidget {
   const TransportRequestPage({super.key});
@@ -36,6 +38,41 @@ class _TransportRequestPageState extends State<TransportRequestPage> {
     _preferredTimeController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickPreferredDate() async {
+    final now = DateTime.now();
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 2),
+    );
+
+    if (picked != null) {
+      _preferredDateController.text = DateFormat('dd/MM/yyyy').format(picked);
+    }
+  }
+
+  Future<void> _pickPreferredTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (picked != null) {
+      final now = DateTime.now();
+      final dateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        picked.hour,
+        picked.minute,
+      );
+
+      _preferredTimeController.text = DateFormat('hh:mm a').format(dateTime);
+    }
   }
 
   Future<void> _submitTransportRequest() async {
@@ -247,9 +284,13 @@ class _TransportRequestPageState extends State<TransportRequestPage> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _preferredDateController,
-                        enabled: !_isLoading,
-                        decoration:
-                        patientInputDecoration('Enter preferred date'),
+                        readOnly: true,
+                        onTap: _isLoading ? null : _pickPreferredDate,
+                        decoration: patientInputDecoration(
+                          'Select date',
+                        ).copyWith(
+                          suffixIcon: const Icon(Icons.calendar_month_outlined),
+                        ),
                       ),
                       const SizedBox(height: 16),
 
@@ -257,9 +298,13 @@ class _TransportRequestPageState extends State<TransportRequestPage> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _preferredTimeController,
-                        enabled: !_isLoading,
-                        decoration:
-                        patientInputDecoration('Enter preferred time'),
+                        readOnly: true,
+                        onTap: _isLoading ? null : _pickPreferredTime,
+                        decoration: patientInputDecoration(
+                          'Select time (AM/PM)',
+                        ).copyWith(
+                          suffixIcon: const Icon(Icons.access_time_outlined),
+                        ),
                       ),
                       const SizedBox(height: 16),
 
