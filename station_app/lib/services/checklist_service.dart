@@ -9,7 +9,6 @@ class ChecklistService {
     required String emtName,
     required String team,
     required String carNumber,
-    required String checklistType,
     required String subcode,
     required List<ChecklistSectionData> sections,
   }) async {
@@ -45,7 +44,6 @@ class ChecklistService {
       'emtName': emtName,
       'team': team,
       'carNumber': carNumber,
-      'checklistType': checklistType,
       'subcode': subcode,
       'sections': sectionsData,
       'statusDate': statusDocId,
@@ -72,7 +70,6 @@ class ChecklistService {
     required String carNumber,
     required String emtName,
     required String team,
-    required String checklistType,
     required List<ReplenishmentItem> items,
   }) async {
     final uid = _auth.currentUser?.uid;
@@ -95,7 +92,6 @@ class ChecklistService {
       'carNumber': carNumber,
       'emtName': emtName,
       'team': team,
-      'checklistType': checklistType,
       'submittedByUid': uid,
       'submittedAt': FieldValue.serverTimestamp(),
       'items': checkedItems,
@@ -225,8 +221,6 @@ class ReplenishmentItem {
     this.isChecked = false,
   });
 }
-
-// ── Serialization data classes ─────────────────────────────────────────────
 
 class ChecklistSectionData {
   final String title;

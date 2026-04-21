@@ -7,7 +7,6 @@ class ReplenishmentPage extends StatefulWidget {
   final String carNumber;
   final String emtName;
   final String team;
-  final String checklistType;
   final ChecklistService checklistService;
 
   const ReplenishmentPage({
@@ -17,7 +16,6 @@ class ReplenishmentPage extends StatefulWidget {
     required this.carNumber,
     required this.emtName,
     required this.team,
-    required this.checklistType,
     required this.checklistService,
   });
 
@@ -37,7 +35,6 @@ class _ReplenishmentPageState extends State<ReplenishmentPage> {
         carNumber: widget.carNumber,
         emtName: widget.emtName,
         team: widget.team,
-        checklistType: widget.checklistType,
         items: widget.items,
       );
 

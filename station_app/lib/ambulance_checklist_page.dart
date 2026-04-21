@@ -28,13 +28,10 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
   List<String> _carNumbers = [];
   String? selectedCarNumber;
 
-  String? selectedChecklistType;
   bool checklistStarted = false;
   bool _isSubmitting = false;
 
   final ChecklistService _checklistService = ChecklistService();
-
-  final List<String> checklistTypes = ['Pre-Checklist', 'Post-Checklist'];
 
   late List<ChecklistSection> sections;
 
@@ -194,13 +191,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
   }
 
   Future<void> _startChecklist() async {
-    if (selectedChecklistType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a checklist type.')),
-      );
-      return;
-    }
-
     if (selectedCarNumber == null || selectedCarNumber!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a car number.')),
@@ -287,10 +277,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
   List<String> _validateChecklistBeforeSubmit() {
     final errors = <String>[];
 
-    if (selectedChecklistType == null || selectedChecklistType!.isEmpty) {
-      errors.add('Checklist type is required.');
-    }
-
     if (selectedCarNumber == null || selectedCarNumber!.isEmpty) {
       errors.add('Car number is required.');
     }
@@ -355,7 +341,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
         emtName: _emtName,
         team: _team,
         carNumber: selectedCarNumber!,
-        checklistType: selectedChecklistType!,
         subcode: _subcode,
         sections: sectionsData,
       );
@@ -372,7 +357,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
               carNumber: selectedCarNumber!,
               emtName: _emtName,
               team: _team,
-              checklistType: selectedChecklistType!,
               checklistService: _checklistService,
             ),
           ),
@@ -390,7 +374,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
 
       setState(() {
         checklistStarted = false;
-        selectedChecklistType = null;
         selectedCarNumber = null;
         sections = _buildChecklistSections();
       });
@@ -499,7 +482,7 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Pre-Checklist Information',
+              'Checklist Information',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -508,7 +491,7 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Review your info and select a checklist type to begin.',
+              'Review your info and select a car number to begin.',
               style: TextStyle(fontSize: 14, color: Color(0xff6b7280)),
             ),
             const SizedBox(height: 24),
@@ -529,14 +512,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildLabeledDropdown(
-              'Checklist Type',
-              selectedChecklistType,
-              checklistTypes,
-                  (value) => setState(() => selectedChecklistType = value),
-              hint: 'Select Pre or Post checklist',
-            ),
-            const SizedBox(height: 16),
             _buildLabeledDropdown(
               'Car Number',
               selectedCarNumber,
@@ -1202,8 +1177,6 @@ class _AmbulanceChecklistPageState extends State<AmbulanceChecklistPage> {
     );
   }
 }
-
-// ── Model classes ─────────────────────────────────────────────────────────────
 
 class ChecklistSection {
   final String title;
