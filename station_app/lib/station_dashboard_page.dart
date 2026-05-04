@@ -9,6 +9,7 @@ import 'wound_care_report_page.dart';
 import 'ambulance_checklist_page.dart';
 import 'protocols_page.dart';
 import 'calculators_home_page.dart';
+import 'my_requests_page.dart';
 import 'services/dashboard_service.dart';
 
 class StationDashboardPage extends StatefulWidget {
@@ -35,6 +36,7 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
     {"title": "Go to Checklist", "icon": Icons.checklist_rtl},
     {"title": "Protocols", "icon": Icons.menu_book_outlined},
     {"title": "Calculators", "icon": Icons.calculate_outlined},
+    {"title": "My Assigned Requests", "icon": Icons.assignment},
   ];
 
   @override
@@ -530,6 +532,7 @@ class _StationDashboardPageState extends State<StationDashboardPage> {
       "Go to Checklist": const AmbulanceChecklistPage(fromLogin: false),
       "Protocols": const ProtocolsPage(fromLogin: false),
       "Calculators": const CalculatorsHomePage(fromLogin: false),
+      "My Assigned Requests": const MyRequestsPage(),
     };
     final page = routes[title];
     if (page != null) {
