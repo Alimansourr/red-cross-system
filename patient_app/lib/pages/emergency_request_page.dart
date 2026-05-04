@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../widgets/patient_app_bar.dart';
 import '../widgets/patient_input_decoration.dart';
 import '../widgets/patient_label.dart';
@@ -19,7 +23,11 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
   final TextEditingController _guestPhoneController = TextEditingController();
   final TextEditingController _conditionController = TextEditingController();
 
+  final ImagePicker _imagePicker = ImagePicker();
+
   String? _selectedEmergencyType;
+  File? _selectedImage;
+
   bool _isLoading = false;
   AssignedStation? _lastAssignedStation;
 
@@ -29,6 +37,34 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
     _guestPhoneController.dispose();
     _conditionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickEmergencyImageFromCamera() async {
+    final XFile? pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+      maxWidth: 1280,
+    );
+
+    if (pickedFile == null) return;
+
+    setState(() {
+      _selectedImage = File(pickedFile.path);
+    });
+  }
+
+  Future<void> _pickEmergencyImageFromGallery() async {
+    final XFile? pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 1280,
+    );
+
+    if (pickedFile == null) return;
+
+    setState(() {
+      _selectedImage = File(pickedFile.path);
+    });
   }
 
   Future<void> _submitEmergencyRequest() async {
@@ -77,6 +113,7 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
         currentCondition: currentCondition,
         guestName: guestName,
         guestPhone: guestPhone,
+        emergencyImageFile: _selectedImage,
       );
 
       if (!mounted) return;
@@ -84,6 +121,7 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
       setState(() {
         _lastAssignedStation = result.station;
         _selectedEmergencyType = null;
+        _selectedImage = null;
       });
 
       _guestNameController.clear();
@@ -116,6 +154,7 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
 
   Widget _assignedStationCard() {
     final station = _lastAssignedStation;
+
     if (station == null) {
       return const SizedBox.shrink();
     }
@@ -146,6 +185,89 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _imagePickerSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const PatientLabel('Emergency Image'),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xfff9fafb),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xffe5e7eb)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_selectedImage != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    _selectedImage!,
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed:
+                      _isLoading ? null : _pickEmergencyImageFromCamera,
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: Text(
+                        _selectedImage == null
+                            ? 'Take Photo'
+                            : 'Retake Photo',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed:
+                      _isLoading ? null : _pickEmergencyImageFromGallery,
+                      icon: const Icon(Icons.photo_library_outlined),
+                      label: const Text('Gallery'),
+                    ),
+                  ),
+                  if (_selectedImage != null) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                        setState(() {
+                          _selectedImage = null;
+                        });
+                      },
+                      icon: const Icon(Icons.close),
+                      tooltip: 'Remove image',
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Optional: attach a photo to help the station understand the situation.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Color(0xff6b7280),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -192,15 +314,15 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
                           decoration: patientInputDecoration('Enter your name'),
                         ),
                         const SizedBox(height: 16),
-
                         const PatientLabel('Phone Number'),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _guestPhoneController,
                           enabled: !_isLoading,
                           keyboardType: TextInputType.phone,
-                          decoration:
-                          patientInputDecoration('Enter contact number'),
+                          decoration: patientInputDecoration(
+                            'Enter contact number',
+                          ),
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -233,8 +355,9 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
                             _selectedEmergencyType = value;
                           });
                         },
-                        decoration:
-                        patientInputDecoration('Select emergency type'),
+                        decoration: patientInputDecoration(
+                          'Select emergency type',
+                        ),
                       ),
                       const SizedBox(height: 16),
                       const PatientLabel('Current Condition'),
@@ -247,6 +370,8 @@ class _EmergencyRequestPageState extends State<EmergencyRequestPage> {
                           'Describe the patient situation briefly',
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      _imagePickerSection(),
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,

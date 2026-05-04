@@ -1,8 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 
 class AssignedStation {
   final String id;
@@ -30,6 +33,9 @@ class EmergencyRequestService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  static const String _uploadUrl =
+      'http://192.168.10.45:8000/upload-emergency-image';
+
   User? get currentUser => _auth.currentUser;
 
   Future<EmergencyRequestResult> submitEmergencyRequest({
@@ -37,6 +43,7 @@ class EmergencyRequestService {
     required String currentCondition,
     String guestName = '',
     String guestPhone = '',
+    File? emergencyImageFile,
   }) async {
     final user = _auth.currentUser;
     Map<String, dynamic> patientData = {};
@@ -54,7 +61,22 @@ class EmergencyRequestService {
       longitude: position.longitude,
     );
 
-    final requestRef = await _firestore.collection('emergency_requests').add({
+    final requestDoc = _firestore.collection('emergency_requests').doc();
+
+    String? emergencyImageUrl;
+    String? emergencyImagePath;
+
+    if (emergencyImageFile != null) {
+      final uploaded = await _uploadEmergencyImage(
+        imageFile: emergencyImageFile,
+        requestId: requestDoc.id,
+      );
+
+      emergencyImageUrl = uploaded['imageUrl'];
+      emergencyImagePath = uploaded['imagePath'];
+    }
+
+    await requestDoc.set({
       'patientId': user?.uid,
       'isGuest': user == null,
 
@@ -96,12 +118,52 @@ class EmergencyRequestService {
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
       'source': 'patient_app',
+
+      'hasImage': emergencyImageUrl != null,
+      'emergencyImageUrl': emergencyImageUrl,
+      'emergencyImagePath': emergencyImagePath,
     });
 
     return EmergencyRequestResult(
-      requestId: requestRef.id,
+      requestId: requestDoc.id,
       station: station,
     );
+  }
+
+  Future<Map<String, String>> _uploadEmergencyImage({
+    required File imageFile,
+    required String requestId,
+  }) async {
+    final uri = Uri.parse(_uploadUrl);
+
+    final request = http.MultipartRequest('POST', uri);
+
+    request.fields['requestId'] = requestId;
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        imageFile.path,
+      ),
+    );
+
+    final streamedResponse = await request.send();
+    final responseBody = await streamedResponse.stream.bytesToString();
+
+    if (streamedResponse.statusCode < 200 || streamedResponse.statusCode >= 300) {
+      throw Exception('Image upload failed: $responseBody');
+    }
+
+    final decoded = jsonDecode(responseBody) as Map<String, dynamic>;
+
+    if (decoded['success'] != true || decoded['imageUrl'] == null) {
+      throw Exception(decoded['message'] ?? 'Image upload failed.');
+    }
+
+    return {
+      'imageUrl': decoded['imageUrl'].toString(),
+      'imagePath': decoded['imagePath']?.toString() ?? '',
+    };
   }
 
   Future<EmergencyRequestResult> submitQuickEmergencyCall() async {
@@ -138,6 +200,7 @@ class EmergencyRequestService {
 
   Future<Position> _determinePosition() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
     if (!serviceEnabled) {
       throw Exception('Please enable location services on your phone.');
     }
@@ -224,12 +287,11 @@ class EmergencyRequestService {
     final dLat = _degreesToRadians(lat2 - lat1);
     final dLon = _degreesToRadians(lon2 - lon1);
 
-    final a =
-        math.sin(dLat / 2) * math.sin(dLat / 2) +
-            math.cos(_degreesToRadians(lat1)) *
-                math.cos(_degreesToRadians(lat2)) *
-                math.sin(dLon / 2) *
-                math.sin(dLon / 2);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_degreesToRadians(lat1)) *
+            math.cos(_degreesToRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
 
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
